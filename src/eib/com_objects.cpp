@@ -199,14 +199,14 @@ int firstObjectAddr(int objno)
 void sendGroupReadTelegram(int objno, int addr)
 {
     bcu.sendTelegram[0] = 0xbc; // Control byte
-    // 1+2 contain the sender address, which is set by bus.sendTelegram()
+    // 1+2 contain the sender address, which is set by knxBus.sendTelegram()
     bcu.sendTelegram[3] = addr >> 8;
     bcu.sendTelegram[4] = addr;
     bcu.sendTelegram[5] = 0xe1;
     bcu.sendTelegram[6] = 0;
     bcu.sendTelegram[7] = 0x00;
 
-    bus.sendTelegram(bcu.sendTelegram, 8);
+    knxBus.sendTelegram(bcu.sendTelegram, 8);
 }
 
 /*
@@ -222,7 +222,7 @@ void sendGroupWriteTelegram(int objno, int addr, bool isResponse)
     int sz = telegramObjectSize(objno);
 
     bcu.sendTelegram[0] = 0xbc; // Control byte
-    // 1+2 contain the sender address, which is set by bus.sendTelegram()
+    // 1+2 contain the sender address, which is set by knxBus.sendTelegram()
     bcu.sendTelegram[3] = addr >> 8;
     bcu.sendTelegram[4] = addr;
     bcu.sendTelegram[5] = 0xe0 | ((sz + 1) & 15);
@@ -235,7 +235,7 @@ void sendGroupWriteTelegram(int objno, int addr, bool isResponse)
     // Process this telegram in the receive queue (if there is a local receiver of this group address)
     processGroupTelegram(addr, APCI_GROUP_VALUE_WRITE_PDU, bcu.sendTelegram);
 
-    bus.sendTelegram(bcu.sendTelegram, 8 + sz);
+    knxBus.sendTelegram(bcu.sendTelegram, 8 + sz);
 }
 
 int sndStartIdx = 0;

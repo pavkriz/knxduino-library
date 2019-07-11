@@ -22,9 +22,6 @@
 //#include <sblib/serial.h>
 #endif
 
-// The interrupt handler for the EIB bus access object
-BUS_TIMER_INTERRUPT_HANDLER(TIMER16_1_IRQHandler, bus);
-
 extern unsigned int writeUserEepromTime;
 extern volatile unsigned int systemTime;
 
@@ -83,7 +80,7 @@ void BcuBase::begin_BCU(int manufacturer, int deviceType, int version)
 
     writeUserEepromTime = 0;
     enabled = true;
-    bus.begin();
+    knxBus.begin();
     //progButtonDebouncer.init(1);
 }
 
@@ -96,7 +93,7 @@ void BcuBase::end()
 {
     enabled = false;
 
-    bus.end();
+    knxBus.end();
 }
 
 void BcuBase::setOwnAddress(int addr)
@@ -114,7 +111,7 @@ void BcuBase::setOwnAddress(int addr)
 #endif
     userEeprom.modified();
 
-    bus.ownAddr = addr;
+    knxBus.ownAddr = addr;
 }
 
 void BcuBase::loop()
@@ -141,7 +138,7 @@ void BcuBase::loop()
 	}
 #endif
 
-    if (bus.telegramReceived() && !bus.sendingTelegram() && (userRam.status & BCU_STATUS_TL))
+    if (knxBus.telegramReceived() && !knxBus.sendingTelegram() && (userRam.status & BCU_STATUS_TL))
         processTelegram();
 
     if (progPin)

@@ -52,7 +52,7 @@ void BCU::loop()
         return;
     BcuBase::loop();
 
-    if (sendGrpTelEnabled && !bus.sendingTelegram())
+    if (sendGrpTelEnabled && !knxBus.sendingTelegram())
     {
         // Send group telegram if group telegram rate limit not exceeded
         if (elapsed(groupTelSent) >= groupTelWaitMillis)
@@ -74,7 +74,7 @@ void BCU::loop()
         connectedAddr = 0;
     }
 
-    if (userEeprom.isModified() && bus.idle() && bus.telegramLen == 0 && connectedAddr == 0)
+    if (userEeprom.isModified() && knxBus.idle() && knxBus.telegramLen == 0 && connectedAddr == 0)
     {
         if (writeUserEepromTime)
         {
@@ -98,21 +98,21 @@ void BCU::sendConControlTelegram(int cmd, int senderSeqNo)
     if (cmd & 0x40)  // Add the sequence number if the command shall contain it
         cmd |= senderSeqNo & 0x3c;
 
-    sendCtrlTelegram[0] = 0xb0 | (bus.telegram[0] & 0x0c); // Control byte
-    // 1+2 contain the sender address, which is set by bus.sendTelegram()
+    sendCtrlTelegram[0] = 0xb0 | (knxBus.telegram[0] & 0x0c); // Control byte
+    // 1+2 contain the sender address, which is set by knxBus.sendTelegram()
     sendCtrlTelegram[3] = connectedAddr >> 8;
     sendCtrlTelegram[4] = connectedAddr;
     sendCtrlTelegram[5] = 0x60;
     sendCtrlTelegram[6] = cmd;
 
-    bus.sendTelegram(sendCtrlTelegram, 7);
+    knxBus.sendTelegram(sendCtrlTelegram, 7);
 }
 
 void BCU::processTelegram()
 {
-    unsigned short destAddr = (bus.telegram[3] << 8) | bus.telegram[4];
-    unsigned char tpci = bus.telegram[6] & 0xc3; // Transport control field (see KNX 3/3/4 p.6 TPDU)
-    unsigned short apci = ((bus.telegram[6] & 3) << 8) | bus.telegram[7];
+    unsigned short destAddr = (knxBus.telegram[3] << 8) | knxBus.telegram[4];
+    unsigned char tpci = knxBus.telegram[6] & 0xc3; // Transport control field (see KNX 3/3/4 p.6 TPDU)
+    unsigned short apci = ((knxBus.telegram[6] & 3) << 8) | knxBus.telegram[7];
 
     if (destAddr == 0) // a broadcast
     {
@@ -120,28 +120,28 @@ void BCU::processTelegram()
         {
             if (apci == APCI_INDIVIDUAL_ADDRESS_WRITE_PDU)
             {
-                setOwnAddress((bus.telegram[8] << 8) | bus.telegram[9]);
+                setOwnAddress((knxBus.telegram[8] << 8) | knxBus.telegram[9]);
             }
             else if (apci == APCI_INDIVIDUAL_ADDRESS_READ_PDU)
             {
-                sendTelegram[0] = 0xb0 | (bus.telegram[0] & 0x0c); // Control byte
-                // 1+2 contain the sender address, which is set by bus.sendTelegram()
+                sendTelegram[0] = 0xb0 | (knxBus.telegram[0] & 0x0c); // Control byte
+                // 1+2 contain the sender address, which is set by knxBus.sendTelegram()
                 sendTelegram[3] = 0x00;  // Zero target address, it's a broadcast
                 sendTelegram[4] = 0x00;
                 sendTelegram[5] = 0xe1;
                 sendTelegram[6] = 0x01;  // APCI_INDIVIDUAL_ADDRESS_RESPONSE_PDU (0x0140)
                 sendTelegram[7] = 0x40;
-                bus.sendTelegram(sendTelegram, 8);
+                knxBus.sendTelegram(sendTelegram, 8);
             }
         }
     }
-    else if ((bus.telegram[5] & 0x80) == 0) // a physical destination address
+    else if ((knxBus.telegram[5] & 0x80) == 0) // a physical destination address
     {
-        if (destAddr == bus.ownAddress()) // it's our physical address
+        if (destAddr == knxBus.ownAddress()) // it's our physical address
         {
             if (tpci & 0x80)  // A connection control command
             {
-                processConControlTelegram(bus.telegram[6]);
+                processConControlTelegram(knxBus.telegram[6]);
             }
             else
             {
@@ -151,11 +151,11 @@ void BCU::processTelegram()
     }
     else if (tpci == T_GROUP_PDU) // a group destination address and multicast
     {
-        processGroupTelegram(destAddr, apci & APCI_GROUP_MASK, bus.telegram);
+        processGroupTelegram(destAddr, apci & APCI_GROUP_MASK, knxBus.telegram);
     }
 
     // At the end: discard the received telegram
-    bus.discardReceivedTelegram();
+    knxBus.discardReceivedTelegram();
 }
 
 bool BCU::processDeviceDescriptorReadTelegram(int id)
@@ -219,8 +219,8 @@ static void cpyFromUserRam(unsigned int address, unsigned char * buffer, unsigne
 
 void BCU::processDirectTelegram(int apci)
 {
-    const int senderAddr = (bus.telegram[1] << 8) | bus.telegram[2];
-    const int senderSeqNo = bus.telegram[6] & 0x3c;
+    const int senderAddr = (knxBus.telegram[1] << 8) | knxBus.telegram[2];
+    const int senderSeqNo = knxBus.telegram[6] & 0x3c;
     int count, address, index;
 #if BCU_TYPE != BCU1_TYPE
     bool found;
@@ -239,8 +239,8 @@ void BCU::processDirectTelegram(int apci)
     switch (apciCmd)  // ADC / memory commands use the low bits for data
     {
     case APCI_ADC_READ_PDU:
-        index = bus.telegram[7] & 0x3f;  // ADC channel
-        count = bus.telegram[8];         // number of samples
+        index = knxBus.telegram[7] & 0x3f;  // ADC channel
+        count = knxBus.telegram[8];         // number of samples
         sendTelegram[5] = 0x64;
         sendTelegram[6] = 0x41;
         sendTelegram[7] = 0xc0 | (index & 0x3f);   // channel
@@ -252,8 +252,8 @@ void BCU::processDirectTelegram(int apci)
 
     case APCI_MEMORY_READ_PDU:
     case APCI_MEMORY_WRITE_PDU:
-        count = bus.telegram[7] & 0x0f; // number of data byes
-        address = (bus.telegram[8] << 8) | bus.telegram[9]; // address of the data block
+        count = knxBus.telegram[7] & 0x0f; // number of data byes
+        address = (knxBus.telegram[8] << 8) | knxBus.telegram[9]; // address of the data block
 
         if (apciCmd == APCI_MEMORY_WRITE_PDU)
         {
@@ -262,31 +262,31 @@ void BCU::processDirectTelegram(int apci)
             serial.print(address, HEX, 4);
             serial.print(" Data:");
             for(int i=0;i<count; i++) {
-                serial.print(bus.telegram[10 + i], HEX, 2);
+                serial.print(knxBus.telegram[10 + i], HEX, 2);
                 serial.print(" ");
             }
             serial.println("");
 #endif
             if(memMapper && memMapper->isMapped(address))
             {
-                memMapper->writeMemPtr(address, bus.telegram + 10, count);
+                memMapper->writeMemPtr(address, knxBus.telegram + 10, count);
             }
 
             if (address >= USER_EEPROM_START && address < USER_EEPROM_END)
             {
-                memcpy(userEepromData + (address - USER_EEPROM_START), bus.telegram + 10, count);
+                memcpy(userEepromData + (address - USER_EEPROM_START), knxBus.telegram + 10, count);
                 userEeprom.modified();
             }
             else if (address >= getUserRamStart() && address < (getUserRamStart() + USER_RAM_SIZE))
-                cpyToUserRam(address, bus.telegram + 10, count);
+                cpyToUserRam(address, knxBus.telegram + 10, count);
 
             sendAck = T_ACK_PDU;
 
 #ifdef LOAD_CONTROL_ADDR
             if (address == LOAD_CONTROL_ADDR)
             {
-                int objectIdx = bus.telegram[10] >> 4;
-                userEeprom.loadState[objectIdx] = loadProperty(objectIdx, bus.telegram + 10, count);
+                int objectIdx = knxBus.telegram[10] >> 4;
+                userEeprom.loadState[objectIdx] = loadProperty(objectIdx, knxBus.telegram + 10, count);
                 userEeprom.modified();
                 break;
             }
@@ -345,8 +345,8 @@ void BCU::processDirectTelegram(int apci)
         case APCI_RESTART_TYPE1_PDU:
             if(apci&1)
             {
-                unsigned int erase   = bus.telegram[8];
-                unsigned int channel = bus.telegram[9];
+                unsigned int erase   = knxBus.telegram[8];
+                unsigned int channel = knxBus.telegram[9];
 
                 if(erase == 0 && channel == 255)
                 {
@@ -378,10 +378,10 @@ void BCU::processDirectTelegram(int apci)
             sendTelegram[5] = 0x65;
             sendTelegram[6] = 0x40 | (APCI_PROPERTY_VALUE_RESPONSE_PDU >> 8);
             sendTelegram[7] = APCI_PROPERTY_VALUE_RESPONSE_PDU & 0xff;
-            index = sendTelegram[8] = bus.telegram[8];
-            id = sendTelegram[9] = bus.telegram[9];
-            count = (sendTelegram[10] = bus.telegram[10]) >> 4;
-            address = ((bus.telegram[10] & 15) << 4) | (sendTelegram[11] = bus.telegram[11]);
+            index = sendTelegram[8] = knxBus.telegram[8];
+            id = sendTelegram[9] = knxBus.telegram[9];
+            count = (sendTelegram[10] = knxBus.telegram[10]) >> 4;
+            address = ((knxBus.telegram[10] & 15) << 4) | (sendTelegram[11] = knxBus.telegram[11]);
 
             if (apci == APCI_PROPERTY_VALUE_READ_PDU)
                 found = propertyValueReadTelegram(index, (PropertyID) id, count, address);
@@ -394,9 +394,9 @@ void BCU::processDirectTelegram(int apci)
             sendTelegram[5] = 0x68;
             sendTelegram[6] = 0x64 | (APCI_PROPERTY_DESCRIPTION_RESPONSE_PDU >> 8);
             sendTelegram[7] = APCI_PROPERTY_DESCRIPTION_RESPONSE_PDU & 0xff;
-            index = sendTelegram[8] = bus.telegram[8];
-            id = sendTelegram[9] = bus.telegram[9];
-            address = (sendTelegram[10] = bus.telegram[10]);
+            index = sendTelegram[8] = knxBus.telegram[8];
+            id = sendTelegram[9] = knxBus.telegram[9];
+            address = (sendTelegram[10] = knxBus.telegram[10]);
             propertyDescReadTelegram(index, (PropertyID) id, address);
             sendTel = true;
             break;
@@ -418,8 +418,8 @@ void BCU::processDirectTelegram(int apci)
 
     if (sendTel)
     {
-        sendTelegram[0] = 0xb0 | (bus.telegram[0] & 0x0c); // Control byte
-        // 1+2 contain the sender address, which is set by bus.sendTelegram()
+        sendTelegram[0] = 0xb0 | (knxBus.telegram[0] & 0x0c); // Control byte
+        // 1+2 contain the sender address, which is set by knxBus.sendTelegram()
         sendTelegram[3] = connectedAddr >> 8;
         sendTelegram[4] = connectedAddr;
 
@@ -431,20 +431,20 @@ void BCU::processDirectTelegram(int apci)
         }
         else incConnectedSeqNo = false;
 
-        bus.sendTelegram(sendTelegram, telegramSize(sendTelegram));
+        knxBus.sendTelegram(sendTelegram, telegramSize(sendTelegram));
     }
 }
 
 void BCU::processConControlTelegram(int tpci)
 {
-    int senderAddr = (bus.telegram[1] << 8) | bus.telegram[2];
+    int senderAddr = (knxBus.telegram[1] << 8) | knxBus.telegram[2];
 
     if (tpci & 0x40)  // An acknowledgement
     {
         tpci &= 0xc3;
         if (tpci == T_ACK_PDU) // A positive acknowledgement
         {
-            int curSeqNo = bus.telegram[6] & 0x3c;
+            int curSeqNo = knxBus.telegram[6] & 0x3c;
             if (incConnectedSeqNo && connectedAddr == senderAddr && lastAckSeqNo !=  curSeqNo)
             {
                 connectedSeqNo += 4;
@@ -475,7 +475,7 @@ void BCU::processConControlTelegram(int tpci)
                 connectedSeqNo = 0;
                 incConnectedSeqNo = false;
                 lastAckSeqNo = -1;
-                bus.setSendAck (0);
+                knxBus.setSendAck (0);
             }
         }
         else if (tpci == T_DISCONNECT_PDU)  // Close the direct data connection
@@ -483,7 +483,7 @@ void BCU::processConControlTelegram(int tpci)
             if (connectedAddr == senderAddr)
             {
                 connectedAddr = 0;
-                bus.setSendAck (0);
+                knxBus.setSendAck (0);
             }
         }
     }

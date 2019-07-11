@@ -22,7 +22,7 @@ class Bus;
 /**
  * The EIB bus access object.
  */
-extern Bus bus;
+extern Bus knxBus;
 
 
 /**
@@ -210,6 +210,9 @@ private:
      */
     void handleTelegram(bool valid);
 
+    void isrArduinoTimerUpdateCallback(stimer_t *obj);
+
+
 protected:
     BusHal& busHal;
     friend class BcuBase;
@@ -269,7 +272,7 @@ inline bool Bus::idle() const
 
 inline int Bus::ownAddress() const
 {
-    return bus.ownAddr;
+    return ownAddr;
 }
 
 inline void Bus::maxSendTries(int tries)

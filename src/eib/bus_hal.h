@@ -20,7 +20,7 @@
 #ifndef sblib_bus_hal_h
 #define sblib_bus_hal_h
 
-#if defined(STM32F303xE) || defined(STM32G071xx)
+#if defined(STM32G071xx)
 
 #include "../platform.h"
 #include "../timer.h"
@@ -82,17 +82,177 @@ public:
     stimer_t _timer; // TODO static?
 protected:
     int rxTimerValue = 0;
-    COMP_HandleTypeDef hcomp = {0};
     bool captureChannelFlag = false;
     bool timeChannelFlag = false;
 
 };
 
-#ifdef STM32F303xE
-#include "bus_hal_f303_begin.h"
-#elif STM32G071xx
-#include "bus_hal_g071_begin.h"
-#endif
+inline void BusHal::begin()
+{
+    __HAL_RCC_SYSCFG_CLK_ENABLE();
+    __HAL_RCC_PWR_CLK_ENABLE();
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    
+    DAC_HandleTypeDef hdac1;
+
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+
+    __HAL_RCC_DAC1_CLK_ENABLE();
+  
+    DAC_ChannelConfTypeDef sConfig = {0};
+
+    /** DAC Initialization 
+    */
+    hdac1.Instance = DAC1;
+    if (HAL_DAC_Init(&hdac1) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    /** DAC channel OUT1 config 
+    */
+    sConfig.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
+    sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
+    sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+    sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_ENABLE;
+    sConfig.DAC_UserTrimming = DAC_TRIMMING_FACTORY;
+    if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_1) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
+    HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, 62);  // arbitrary value to detect falling edge on KNX bus
+
+    /**COMP1 GPIO Configuration    
+    PA0     ------> COMP1_OUT
+    PA1     ------> COMP1_INP 
+    */
+    // TODO migrate HAL_GPIO_Init to LL
+
+    GPIO_InitStruct.Pin = GPIO_PIN_1;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF7_COMP1;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    LL_COMP_ConfigInputs(COMP1, LL_COMP_INPUT_MINUS_DAC1_CH1, LL_COMP_INPUT_PLUS_IO3);
+    LL_COMP_SetInputHysteresis(COMP1, LL_COMP_HYSTERESIS_HIGH);
+    LL_COMP_SetOutputPolarity(COMP1, LL_COMP_OUTPUTPOL_NONINVERTED);
+    LL_COMP_SetOutputBlankingSource(COMP1, LL_COMP_BLANKINGSRC_NONE);
+    LL_COMP_SetPowerMode(COMP1, LL_COMP_POWERMODE_HIGHSPEED);
+    LL_COMP_SetCommonWindowMode(__LL_COMP_COMMON_INSTANCE(COMP1), LL_COMP_WINDOWMODE_DISABLE);
+    LL_COMP_SetCommonWindowOutput(__LL_COMP_COMMON_INSTANCE(COMP1), LL_COMP_WINDOWOUTPUT_EACH_COMP);
+
+    /* Wait loop initialization and execution */
+    /* Note: Variable divided by 2 to compensate partially CPU processing cycles */
+    __IO uint32_t wait_loop_index = 0;
+    wait_loop_index = (LL_COMP_DELAY_VOLTAGE_SCALER_STAB_US * (SystemCoreClock / (1000000 * 2)));
+    while(wait_loop_index != 0)
+    {
+      wait_loop_index--;
+    }
+
+    LL_COMP_Enable(COMP1);
+
+    // TIM init
+
+    // Arduino interfacing for UPDATE event callback that is already handled by Arduino STM32 core,
+    // beware, may interfere with libraries using STM32 hardware timers (PWM, Servo, SoftSerial,...)
+    _timer.timer = TIM15;
+    // mimics TimerHandleInit:
+    TIM_HandleTypeDef *htim = &(_timer.handle);
+
+    // HAL stuff
+    __HAL_RCC_TIM15_CLK_ENABLE();
+  
+    /**TIM15 GPIO Configuration    
+    PA2     ------> TIM15_CH1 
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_2;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF5_TIM15;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /**TIM15 GPIO Configuration    
+    PA3     ------> TIM15_CH2 
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_3;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF5_TIM15;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    HAL_NVIC_EnableIRQ(TIM15_IRQn);
+
+    htim->Instance = TIM15;
+    htim->Init.Prescaler = 64; // 64MHz/64 = 1MHz (ie. 1us tick) TODO calc base on real CLK
+    htim->Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim->Init.Period = 65535; // 2^16-1
+    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim->Init.RepetitionCounter = 0;
+    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(htim) != HAL_OK) {
+        _Error_Handler(__FILE__, __LINE__);
+    }
+    if (HAL_TIM_IC_Init(htim) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    if (HAL_TIM_PWM_Init(htim) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    TIM_IC_InitTypeDef sConfigIC;
+    TIM_OC_InitTypeDef sConfigOC;
+
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+    sConfigIC.ICFilter = 4;
+    if (HAL_TIM_IC_ConfigChannel(htim, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    sConfigOC.OCMode = TIM_OCMODE_PWM1;
+    sConfigOC.Pulse = 0;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
+    sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+    sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+    if (HAL_TIM_PWM_ConfigChannel(htim, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    // the stupid HAL_TIM_PWM_ConfigChannel automaticaly enables TIM_CCMR1_OC2PE preload bit, but we dont want to use it
+    htim->Instance->CCMR1 &= ~TIM_CCMR1_OC2PE;  // disable TIM_CCMR1_OC2PE
+    
+    if (HAL_TIM_Base_Start(htim) != HAL_OK) {
+      Error_Handler();
+    }
+
+    if (HAL_TIM_IC_Start_IT(htim, TIM_CHANNEL_1) != HAL_OK) {
+      Error_Handler();
+    }
+    // TODO? make sure we don't make any unintentional pulse here
+    if (HAL_TIM_PWM_Start(htim, TIM_CHANNEL_2) != HAL_OK) {
+      Error_Handler();
+    }
+
+}
 
 inline void BusHal::idleState()
 {

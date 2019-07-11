@@ -208,7 +208,7 @@ inline bool BcuBase::programmingMode() const
 
 inline int BcuBase::ownAddress() const
 {
-    return bus.ownAddr;
+    return knxBus.ownAddr;
 }
 
 inline bool BcuBase::applicationRunning() const

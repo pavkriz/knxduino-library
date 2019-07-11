@@ -535,3 +535,10 @@ void Bus::sendTelegram(unsigned char* telegram, unsigned short length)
     }
     busHal.enableInterrupts();
 }
+
+void Bus::isrArduinoTimerUpdateCallback(stimer_t *obj)
+{
+    // TODO filter particular timer ?
+    busHal.isrCallbackUpdate(&obj->handle);
+    timerInterruptHandler();
+}
