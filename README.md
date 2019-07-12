@@ -17,8 +17,8 @@
     * PA1 (COMP1_INP) - KNX_RX_AN (bus voltage/34)
     * PC1 (TIM15_CH1)
     * PC2 (TIM15_CH2) - KNX_TX
-    * PA2 (USART1_TX) - Debug UART (Serial) TX
-    * PA3 (USART1_RX) - Debug UART (Serial) RX
+    * PA2 (USART2_TX) - Debug UART (Serial) TX
+    * PA3 (USART2_RX) - Debug UART (Serial) RX
     
 
 ## Acknowledgement
