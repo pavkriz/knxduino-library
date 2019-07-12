@@ -122,7 +122,7 @@ protected:
 
     // The method begin_BCU() is renamed during compilation to indicate the BCU type.
     // If you get a link error then the library's BCU_TYPE is different from your application's BCU_TYPE.
-    void begin_BCU(int manufacturer, int deviceType, int version);
+    void begin_BCU(int manufacturer, int deviceType, int version, int busHalSettings);
 
 private:
     MemMapper *memMapper;

@@ -35,7 +35,7 @@ BcuBase::BcuBase()
 
 // The method begin_BCU() is renamed during compilation to indicate the BCU type.
 // If you get a link error then the library's BCU_TYPE is different from your application's BCU_TYPE.
-void BcuBase::begin_BCU(int manufacturer, int deviceType, int version)
+void BcuBase::begin_BCU(int manufacturer, int deviceType, int version, int busHalSettings)
 {
 	_begin();
 #ifdef DUMP_TELEGRAMS
@@ -80,7 +80,7 @@ void BcuBase::begin_BCU(int manufacturer, int deviceType, int version)
 
     writeUserEepromTime = 0;
     enabled = true;
-    knxBus.begin();
+    knxBus.begin(busHalSettings);
     //progButtonDebouncer.init(1);
 }
 

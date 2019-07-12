@@ -22,6 +22,9 @@
 
 #if defined(STM32G071xx)
 
+#define KNXDUINO_ONE_PINMAPPING 0
+#define KNXDUINO_NUCLEO_PINMAPPING 1
+
 #include "../platform.h"
 #include "../timer.h"
 
@@ -58,7 +61,7 @@ class BusHal
 {
 public:
     BusHal();
-    void begin();
+    void begin(int busHalSettings);
     void idleState();
     void waitBeforeSending(unsigned int timeValue);
     bool isCaptureChannelFlag();
@@ -87,7 +90,7 @@ protected:
 
 };
 
-inline void BusHal::begin()
+inline void BusHal::begin(int busHalSettings)
 {
     __HAL_RCC_SYSCFG_CLK_ENABLE();
     __HAL_RCC_PWR_CLK_ENABLE();
@@ -173,26 +176,53 @@ inline void BusHal::begin()
 
     // HAL stuff
     __HAL_RCC_TIM15_CLK_ENABLE();
-  
-    /**TIM15 GPIO Configuration    
-    PA2     ------> TIM15_CH1 
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_2;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF5_TIM15;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /**TIM15 GPIO Configuration    
-    PA3     ------> TIM15_CH2 
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_3;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF5_TIM15;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    if (busHalSettings == KNXDUINO_ONE_PINMAPPING) {
+
+        // KNXduino One board mapping
+        /**TIM15 GPIO Configuration    
+        PA2     ------> TIM15_CH1 
+        */
+        GPIO_InitStruct.Pin = GPIO_PIN_2;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+        GPIO_InitStruct.Alternate = GPIO_AF5_TIM15;
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+        /**TIM15 GPIO Configuration    
+        PA3     ------> TIM15_CH2 
+        */
+        GPIO_InitStruct.Pin = GPIO_PIN_3;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+        GPIO_InitStruct.Alternate = GPIO_AF5_TIM15;
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    } else {
+         // Nucleo 64 board mapping  
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+        /**TIM15 GPIO Configuration    
+        PC1     ------> TIM15_CH1 
+        */
+        GPIO_InitStruct.Pin = GPIO_PIN_1;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+        GPIO_InitStruct.Alternate = GPIO_AF2_TIM15;
+        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+        /**TIM15 GPIO Configuration    
+        PC2     ------> TIM15_CH2 
+        */
+        GPIO_InitStruct.Pin = GPIO_PIN_2;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+        GPIO_InitStruct.Alternate = GPIO_AF2_TIM15;
+        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    }
 
     HAL_NVIC_EnableIRQ(TIM15_IRQn);
 

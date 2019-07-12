@@ -1,7 +1,10 @@
 #include "Arduino.h"
 #include "knxduino.h"
 
-HardwareSerial Serial(USART1);  // use USART1 for KNXduino One board
+// Select Board: Nucleo-64, Board part number: Nucleo G071RB, U(S)ART support: Enable (no generic 'Serial')
+
+HardwareSerial Serial(USART1);  // use USART1 for KNXduino One board (PA9, PA10 pins)
+//HardwareSerial Serial(USART2);  // use USART2 for Nucleo 64 G071RB board (PA2, PA3 pins)
 int counter;
 
 void setup() {
@@ -10,7 +13,8 @@ void setup() {
   Serial.println("Start");
 
   attachKnxBusTimerUpdateIntHandle();
-  bcu.begin(2, 1, 1); // ABB, dummy something device
+  // Change to KNXDUINO_NUCLEO_PINMAPPING when using Nucleo board instead of KNXduino One down below
+  bcu.begin(2, 1, 1, KNXDUINO_ONE_PINMAPPING); // ABB, dummy something device
   bcu.setOwnAddress(0xFFC0); // addr hard-wired, TODO: EEPROM not implemented yet
 
   // Disable telegram processing by the lib

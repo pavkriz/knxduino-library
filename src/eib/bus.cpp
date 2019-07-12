@@ -71,7 +71,7 @@ Bus::Bus(BusHal& aBusHal)
     state = Bus::IDLE;
 }
 
-void Bus::begin()
+void Bus::begin(int busHalSettings)
 {
     ownAddr = (userEeprom.addrTab[0] << 8) | userEeprom.addrTab[1];
 #if BCU_TYPE != BCU1_TYPE
@@ -90,7 +90,7 @@ void Bus::begin()
     sendTriesMax = 4;
     collision = false;
 
-    busHal.begin();
+    busHal.begin(busHalSettings);
 
     //
     // Init GPIOs for debugging

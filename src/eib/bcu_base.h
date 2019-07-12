@@ -48,8 +48,9 @@ public:
      * @param manufacturer - the manufacturer ID (16 bit)
      * @param deviceType - the device type (16 bit)
      * @param version - the version of the application program (8 bit)
+     * @param busHalSettings - hardware-related settings such as pin-mapping
      */
-    void begin(int manufacturer, int deviceType, int version);
+    void begin(int manufacturer, int deviceType, int version, int busHalSettings);
 
     // /**
     //  * Set RxPin of board, must be called before begin method
@@ -175,7 +176,7 @@ public:
 protected:
     // The method begin_BCU() is renamed during compilation to indicate the BCU type.
     // If you get a link error then the library's BCU_TYPE is different from your application's BCU_TYPE.
-    void begin_BCU(int manufacturer, int deviceType, int version);
+    void begin_BCU(int manufacturer, int deviceType, int version, int busHalSettings);
     /*
      * Special initialization for the BCU
      */
@@ -196,9 +197,9 @@ protected:
 //  Inline functions
 //
 
-inline void BcuBase::begin(int manufacturer, int deviceType, int version)
+inline void BcuBase::begin(int manufacturer, int deviceType, int version, int busHalSettings)
 {
-    begin_BCU(manufacturer, deviceType, version);
+    begin_BCU(manufacturer, deviceType, version, busHalSettings);
 }
 
 inline bool BcuBase::programmingMode() const

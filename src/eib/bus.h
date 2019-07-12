@@ -82,7 +82,7 @@ public:
      * This powers on all used components.
      * This method must be called before the bus can be used.
      */
-    void begin();
+    void begin(int busHalSettings);
 
     /**
      * End using the bus.
