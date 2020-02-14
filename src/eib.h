@@ -10,6 +10,8 @@
 #ifndef sblib_eib_h
 #define sblib_eib_h
 
+#define APP_TO_BOOTLOADER_FLAG_ADDR (SRAM_BASE+SRAM_SIZE_MAX-4)
+
 #include "eib/bcu.h"
 #include "eib/bus.h"
 #include "eib/addr_tables.h"

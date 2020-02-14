@@ -192,4 +192,7 @@ enum ComFlag
     COMFLAG_MASK = 0x15
 };
 
+#define BIG_ENDIAN 1
+#define LITTLE_ENDIAN 2
+
 #endif /*sblib_eib_types_h*/

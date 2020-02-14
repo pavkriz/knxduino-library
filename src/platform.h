@@ -9,4 +9,6 @@
 #error "Only STM32G0xx devices are supported"
 #endif
 
+void Error_Handler();
+
 #endif

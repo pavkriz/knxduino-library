@@ -36,7 +36,7 @@ void loop() {
         knxBus.discardReceivedTelegram();
   }
 
-  // Blink on 0/0/1 KNX group address
+  // Blink on 0/0/1 KNX grouvp address
 
   unsigned char sendTelBuffer[32];
   sendTelBuffer[0] = 188;

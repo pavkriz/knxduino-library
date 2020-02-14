@@ -14,16 +14,19 @@
 #endif
 
 #include "eib.h"
+#include "eib/bus_hal.h"
 //#include <sblib/io_pin_names.h>
+
 #ifndef IS_BOOTLOADER
+
 static BCU _bcu = BCU();
 BcuBase& bcu = _bcu;
-#endif
 
 // The EIB bus access objects
 BusHal knxBusHal;
 Bus knxBus(knxBusHal);
 //Bus bus(timer16_1, PIN_EIB_RX, PIN_EIB_TX, CAP0, MAT0);
+
 
 /*
  * Global HAL IRQ Callbacks.
@@ -48,5 +51,17 @@ void attachKnxBusTimerUpdateIntHandle() {
   attachIntHandle(&knxBusHal._timer, knxBusIsrArduinoTimerUpdateCallback);
 }
 
+//extern "C"
+void yield(void)
+{
+  bcu.loop();
+}
+
+#else
+
+extern BusHal knxBusHal;
+extern Bus knxBus;
+
+#endif
 
 #endif /* KNXDUINO_H_ */

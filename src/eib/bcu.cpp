@@ -9,6 +9,7 @@
  */
 
 #define INSIDE_BCU_CPP
+#include "../eib.h"
 #include "bcu.h"
 #include "apci.h"
 #include "../internal/functions.h"
@@ -350,7 +351,7 @@ void BCU::processDirectTelegram(int apci)
 
                 if(erase == 0 && channel == 255)
                 {
-                    unsigned int * magicWord = (unsigned int *) 0x10000000;
+                    unsigned int * magicWord = (unsigned int *) APP_TO_BOOTLOADER_FLAG_ADDR;
                     *magicWord = 0x5E1FB055;
                 }
             }
