@@ -1,6 +1,8 @@
 {
     //"cortex-debug.openocdPath": "/home/pavkriz/.platformio/packages/tool-openocd/bin/openocd",
-    "cortex-debug.armToolchainPath": "/home/pavkriz/.platformio/packages/toolchain-gccarmnoneeabi/bin/",
+    "arduino.path": "/home/pavkriz/programs/arduino-1.8.11",
+    "arduino.additionalUrls": "https://github.com/stm32duino/BoardManagerFiles/raw/master/STM32/package_stm_index.json",
+    "cortex-debug.armToolchainPath": "/home/pavkriz/.arduino15/packages/STM32/tools/arm-none-eabi-gcc/8.2.1-1.7/bin",
     "C_Cpp.intelliSenseEngine": "Default",
     "C_Cpp.clang_format_fallbackStyle": "WebKit",
     "arduino.logLevel": "info",
@@ -30,6 +32,9 @@
         "system_error": "cpp",
         "tuple": "cpp",
         "type_traits": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "cstddef": "cpp",
+        "string": "cpp",
+        "string_view": "cpp"
     }
 }

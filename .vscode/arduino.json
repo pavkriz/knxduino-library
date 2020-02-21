@@ -1,6 +1,6 @@
 {
-    "board": "STM32:stm32:Nucleo_64",
-    "configuration": "pnum=NUCLEO_G071RB,upload_method=MassStorage,xserial=none,usb=none,xusb=FS,opt=osstd,rtlib=nano",
+    "board": "knxduino:stm32:knxduino",
+    "configuration": "pnum=knxduino_ONE,opt=ogstd,upload_method=STLink,xserial=none",
     "sketch": "examples/KNXduinoBlinkOverKNX/KNXduinoBlinkOverKNX.ino",
     "output": "build",
     "port": "/dev/ttyACM0"

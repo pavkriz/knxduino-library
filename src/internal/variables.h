@@ -10,7 +10,6 @@
 #ifndef sblib_internal_variables_h
 #define sblib_internal_variables_h
 
-#include "../eib/properties.h"
 #include "../eib/user_memory.h"
 
 // System time in milliseconds (from timer.cpp)

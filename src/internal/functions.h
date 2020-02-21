@@ -10,7 +10,6 @@
 #ifndef sblib_internal_functions_h
 #define sblib_internal_functions_h
 
-#include "../eib/property_types.h"
 
 /*
  *  These functions are private library functions. Do not call from
@@ -31,43 +30,6 @@ void writeUserEeprom();
  * Returns true if a group telegram has been sent.
  */
 bool sendNextGroupTelegram();
-
-/*
- * Process a property-value read telegram. (properties.cpp)
- *
- * @param objectIdx - the object index
- * @param propertyId - the property ID
- * @param count - the number of elements to read
- * @param start - the index of the first element to read
- *
- * @return True if the request was processed, false if an error occured.
- */
-bool propertyValueReadTelegram(int objectIdx, PropertyID propertyId, int count, int start);
-
-/*
- * Process a property-value write telegram. (properties.cpp)
- * The data to write is stored in bus.telegram[12..]
- *
- * @param objectIdx - the object index
- * @param propertyId - the property ID
- * @param count - the number of elements to write
- * @param start - the index of the first element to write
- *
- * @return True if the request was processed, false if an error occured.
- */
-bool propertyValueWriteTelegram(int objectIdx, PropertyID propertyId, int count, int start);
-
-/*
- * Process a property-description read telegram.
- * (properties.cpp)
- *
- * @param objectIdx - the object index
- * @param propertyId - the property ID
- * @param propertyIdx - the index of the property, if it is an array
- *
- * @return True if the request was processed, false if an error occured.
- */
-bool propertyDescReadTelegram(int objectIdx, PropertyID propertyId, int propertyIdx);
 
 
 #endif /*sblib_internal_functions_h*/

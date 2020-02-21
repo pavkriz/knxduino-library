@@ -12,14 +12,13 @@
 //#include <sblib/io_pin_names.h>
 #include "bcu_base.h"
 #include "user_memory.h"
-#include "addr_tables.h"
 //#include <sblib/internal/functions.h>
 //#include <sblib/internal/variables.h>
 //#include <sblib/internal/iap.h>
 #include <string.h>
 
 #ifdef DUMP_TELEGRAMS
-//#include <sblib/serial.h>
+extern Stream Serial;
 #endif
 
 extern unsigned int writeUserEepromTime;
@@ -114,6 +113,11 @@ void BcuBase::setOwnAddress(int addr)
     knxBus.ownAddr = addr;
 }
 
+void BcuBase::setOwnAddress(int addr1, int addr2, int addr3)
+{
+    setOwnAddress(addr1*256*16 + addr2*256 + addr3);    
+}
+
 void BcuBase::loop()
 {
     if (!enabled)
@@ -121,20 +125,16 @@ void BcuBase::loop()
 
 #ifdef DUMP_TELEGRAMS
 	{
-    	// TODO
-//    	extern unsigned char telBuffer[];
-//    	extern unsigned int telLength ;
-//    	if (telLength > 0)
-//    	{
-//    		serial.print("RCV: ");
-//            for (int i = 0; i < telLength; ++i)
-//            {
-//                if (i) serial.print(" ");
-//                serial.print(telBuffer[i], HEX, 2);
-//            }
-//            serial.println();
-//            telLength = 0;
-//    	}
+   	if (knxBus.telegramLen > 0)
+   	{
+   		Serial.print("RCV: ");
+           for (int i = 0; i < knxBus.telegramLen; ++i)
+           {
+               if (i) Serial.print(" ");
+               Serial.print(knxBus.telegram[i], HEX);
+           }
+           Serial.println();
+   	}
 	}
 #endif
 

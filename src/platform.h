@@ -9,6 +9,8 @@
 #error "Only STM32G0xx devices are supported"
 #endif
 
-void Error_Handler();
+#ifdef IS_BOOTLOADER
+	void Error_Handler();
+#endif
 
 #endif

@@ -14,8 +14,5 @@
 
 #include "eib/bcu.h"
 #include "eib/bus.h"
-#include "eib/addr_tables.h"
-#include "eib/com_objects.h"
-#include "eib/properties.h"
 
 #endif /*sblib_eib_h*/

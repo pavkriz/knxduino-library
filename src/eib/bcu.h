@@ -14,16 +14,19 @@
 #include "../types.h"
 #include "bus.h"
 #include "bcu_type.h"
-#include "properties.h"
 #include "user_memory.h"
 #include "../utils.h"
 #include "../mem_mapper.h"
 #include "../usr_callback.h"
+#include "ComObjects.h"
 
 
 // Rename the method begin_BCU() of the class BCU to indicate the BCU type. If you get a
 // link error then the library's BCU_TYPE is different from the application's BCU_TYPE.
 #define begin_BCU  CPP_CONCAT_EXPAND(begin_,BCU_NAME)
+
+class ComObjects;
+class BcuBase;
 
 /**
  * Class for controlling all BCU related things.

@@ -13,6 +13,7 @@
 #include "../types.h"
 #include "bcu_type.h"
 #include "bus_hal.h"
+#include "ComObjects.h"
 
 // dump all received and sent telegrams out on the serial interface
 //#define DUMP_TELEGRAMS
@@ -74,7 +75,7 @@ public:
     /**
      * Create a bus access object.
      */
-    Bus(BusHal& busHal);
+    Bus(BusHal& busHal, ComObjects* comObjectsPtr);
 
     /**
      * Begin using the bus.
@@ -218,6 +219,7 @@ protected:
     friend class BcuBase;
     volatile int ownAddr;                 //!< Our own physical address on the bus
     volatile int sendAck;                 //!< Send an acknowledge or not-acknowledge byte if != 0
+    ComObjects* comObjectsPtr;
 
 private:
     volatile State state;                 //!< The state of the lib's telegram sending/receiving

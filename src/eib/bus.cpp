@@ -13,9 +13,8 @@
 //#include <sblib/core.h>
 //#include <sblib/interrupt.h>
 //#include <sblib/platform.h>
-#include "addr_tables.h"
 #include "user_memory.h"
-#include "properties.h"
+#include "../utils.h"
 
 /*
  * The timer16_1 is used as follows:
@@ -65,8 +64,8 @@ unsigned char telBuffer[32];
 unsigned int telLength = 0;
 #endif
 
-Bus::Bus(BusHal& aBusHal)
-:busHal(aBusHal)
+Bus::Bus(BusHal& aBusHal, ComObjects* aComObjectsPtr)
+:busHal(aBusHal),comObjectsPtr(aComObjectsPtr)
 {
     state = Bus::IDLE;
 }
@@ -150,7 +149,7 @@ void Bus::handleTelegram(bool valid)
         // We ACK the telegram only if it's for us
         if (telegram[5] & 0x80)
         {
-            if (destAddr == 0 || indexOfAddr(destAddr) >= 0)
+            if (comObjectsPtr->containsGroupAddress(destAddr))
                 processTel = true;
         }
         else if (destAddr == ownAddr)

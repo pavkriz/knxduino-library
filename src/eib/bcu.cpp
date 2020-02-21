@@ -13,7 +13,6 @@
 #include "bcu.h"
 #include "apci.h"
 #include "../internal/functions.h"
-#include "com_objects.h"
 #include <string.h>
 #include "user_memory.h"
 #include "../internal/variables.h"
@@ -58,7 +57,7 @@ void BCU::loop()
         // Send group telegram if group telegram rate limit not exceeded
         if (elapsed(groupTelSent) >= groupTelWaitMillis)
         {
-         if (sendNextGroupTelegram())
+          if (comObjects.sendNextGroupTelegram(this))
              groupTelSent = millis();
         }
         // To prevent overflows if no telegrams are sent for a long time
@@ -152,7 +151,7 @@ void BCU::processTelegram()
     }
     else if (tpci == T_GROUP_PDU) // a group destination address and multicast
     {
-        processGroupTelegram(destAddr, apci & APCI_GROUP_MASK, knxBus.telegram);
+    	comObjects.processGroupTelegram(this, destAddr, apci & APCI_GROUP_MASK, knxBus.telegram);
     }
 
     // At the end: discard the received telegram

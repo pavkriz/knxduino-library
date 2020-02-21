@@ -13,10 +13,9 @@
 #include "../types.h"
 #include "bus.h"
 #include "bcu_type.h"
-#include "properties.h"
 #include "user_memory.h"
 #include "../utils.h"
-
+#include "ComObjects.h"
 
 // Rename the method begin_BCU() of the class BCU to indicate the BCU type. If you get a
 // link error then the library's BCU_TYPE is different from the application's BCU_TYPE.
@@ -103,6 +102,16 @@ public:
      * Set our own physical address. Normally the physical address is set by ETS when
      * programming the device.
      *
+     * @param addr1 - the physical address - part 1
+     * @param addr2 - the physical address - part 2
+     * @param addr3 - the physical address - part 3
+     */
+    void setOwnAddress(int addr1, int addr2, int addr3);
+
+    /**
+     * Set our own physical address. Normally the physical address is set by ETS when
+     * programming the device.
+     *
      * @param addr - the physical address
      */
     void setOwnAddress(int addr);
@@ -154,6 +163,14 @@ public:
      */
     virtual void loop();
 
+    void addComObject(ComObject* comObject) {
+        comObjects.addObject(comObject);
+    }
+
+    ComObjects* getComObjectsPtr() {
+        return &comObjects;
+    }
+
     /**
      * A buffer for sending telegrams. This buffer is considered library private
      * and should rather not be used by the application program.
@@ -190,6 +207,8 @@ protected:
     unsigned int connectedTime;    //!< System time of the last connected telegram.
     bool incConnectedSeqNo;        //!< True if the sequence number shall be incremented on ACK.
     int lastAckSeqNo;              //!< Last acknowledged sequence number
+
+    ComObjects comObjects;
 };
 
 

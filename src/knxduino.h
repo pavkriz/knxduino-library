@@ -15,6 +15,7 @@
 
 #include "eib.h"
 #include "eib/bus_hal.h"
+#include "eib/BinaryValue.h"
 //#include <sblib/io_pin_names.h>
 
 #ifndef IS_BOOTLOADER
@@ -24,7 +25,7 @@ BcuBase& bcu = _bcu;
 
 // The EIB bus access objects
 BusHal knxBusHal;
-Bus knxBus(knxBusHal);
+Bus knxBus(knxBusHal, bcu.getComObjectsPtr());
 //Bus bus(timer16_1, PIN_EIB_RX, PIN_EIB_TX, CAP0, MAT0);
 
 
