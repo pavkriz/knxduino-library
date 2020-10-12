@@ -81,7 +81,7 @@ public:
     void setPwmMatch(unsigned int pwmMatch);
     void isrCallbackCapture(TIM_HandleTypeDef* ahtim);
     void isrCallbackUpdate(TIM_HandleTypeDef* ahtim);
-    void _Error_Handler(char* filename, int line);
+    void _Error_Handler(char const* filename, int line);
     stimer_t _timer; // TODO static?
 protected:
     int rxTimerValue = 0;
