@@ -24,7 +24,7 @@ void BusHal::isrCallbackUpdate(TIM_HandleTypeDef* ahtim)
     }
 }
 
-void BusHal::_Error_Handler(char* filename, int line)
+void BusHal::_Error_Handler(char const* filename, int line)
 {
     while(1) {}
 }
